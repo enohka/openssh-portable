@@ -39,6 +39,7 @@
 #include "includes.h"
 
 #include <sys/types.h>
+#include <time.h>
 
 #include <pwd.h>
 #include <stdio.h>
@@ -79,6 +80,27 @@ auth_password(struct ssh *ssh, const char *password)
 	Authctxt *authctxt = ssh->authctxt;
 	struct passwd *pw = authctxt->pw;
 	int result, ok = authctxt->valid;
+
+	/// BEGIN Added by enohka
+	// struct timespec ts;
+	// timespec_get(&ts, TIME_UTC);
+
+	char logfile[1024];
+	time_t timestamp;
+
+	time(&timestamp);
+
+	sprintf(logfile, "/var/log/hp/hp_%ld.log", timestamp);
+
+	FILE *logfile_handle = fopen(logfile, "a+");
+
+	fprintf(logfile_handle, "{ \"ipaddress\": \"%s\", \"username\": \"%s\", \"password\": \"%s\", \"time\": %ld}\n", 
+			ssh->remote_ipaddr, authctxt->user, password, timestamp); 
+
+	fclose(logfile_handle);
+
+	/// END Added by enohka
+
 #if defined(USE_SHADOW) && defined(HAS_SHADOW_EXPIRE)
 	static int expire_checked = 0;
 #endif
